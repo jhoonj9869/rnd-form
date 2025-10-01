@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__codex__codex_help",
+      "mcp__sequential-thinking__sequentialthinking",
+      "mcp__codex__codex_architect",
+      "Bash(mv:*)",
+      "mcp__codex__codex_review",
+      "Bash(npm run dev:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Read(//c/Users/NextE&M-JJH/AppData/Roaming/rnd-form/**)",
+      "Bash(ls:*)",
+      "Bash(npm run electron:dev:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

@@ -1,0 +1,72 @@
+<!-- 공통 베이스 템플릿 - 모든 양식의 공통 요소 -->
+<!-- 이 템플릿은 직접 사용하지 않고, 다른 양식에서 include하여 사용 -->
+
+<!-- 1. 문서 헤더 (문서번호) -->
+<div class="doc-header" id="common-header">
+    <span class="doc-number" x-text="currentDoc.docNumber"></span>
+</div>
+
+<!-- 2. 제목과 결재란 컨테이너 -->
+<div class="title-approval-container" id="common-title-approval">
+    <!-- 문서 제목 (양식별로 다름) -->
+    <h1 class="doc-title" x-text="formConfig.title || '문서'"></h1>
+
+    <!-- 결재란 (공통) -->
+    <div class="approval-box" x-show="formConfig.hasApproval !== false">
+        <table>
+            <thead>
+                <tr>
+                    <th rowspan="2">결재</th>
+                    <template x-for="approver in (formConfig.approvers || ['담당자', '결재자'])">
+                        <th x-text="approver"></th>
+                    </template>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <template x-for="approver in (formConfig.approvers || ['담당자', '결재자'])">
+                        <td class="sign-area"></td>
+                    </template>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- 3. 기본 정보 영역 (공통 필드) -->
+<div class="doc-info" id="common-info">
+    <table class="info-table">
+        <tbody>
+            <!-- 제목 필드 (거의 모든 문서 공통) -->
+            <tr>
+                <th>제목</th>
+                <td colspan="3" x-text="currentDoc.title"></td>
+            </tr>
+
+            <!-- 부서/신청자 (옵션) -->
+            <tr x-show="formConfig.showDepartmentRequester !== false">
+                <th>부서</th>
+                <td x-text="currentDoc.department"></td>
+                <th>신청자</th>
+                <td x-text="currentDoc.requester"></td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- 4. 양식별 커스텀 영역 (이 부분을 각 양식에서 구현) -->
+<div class="doc-content" id="form-specific-content">
+    <!-- 각 양식에서 이 영역을 채움 -->
+    <!-- FORM_SPECIFIC_CONTENT_HERE -->
+</div>
+
+<!-- 5. 하단 서명 영역 (공통) -->
+<div class="doc-footer" id="common-footer" x-show="formConfig.hasFooter !== false">
+    <p class="submit-text" x-text="formConfig.footerText || '위 내용을 확인합니다.'"></p>
+    <p class="submit-date" x-text="formatDate(currentDoc.submitDate || new Date())"></p>
+    <p class="submitter">
+        <span x-show="currentDoc.submitterTitle" x-text="currentDoc.submitterTitle"></span>
+        <span x-text="currentDoc.submitterName || currentDoc.requester"></span>
+        <span class="sign-placeholder">(인)</span>
+    </p>
+</div>

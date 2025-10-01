@@ -1,0 +1,221 @@
+<div class="doc-content purchase-order-form">
+    <div class="form-header">
+        <h1>구매요청서</h1>
+        <div class="doc-number">
+            <span>문서번호:</span>
+            <span x-text="currentDoc.docNumber || '미지정'"></span>
+        </div>
+    </div>
+
+    <!-- 결재란 -->
+    <div class="approval-section">
+        <table class="approval-table">
+            <thead>
+                <tr>
+                    <th rowspan="3" class="approval-title">결재</th>
+                    <th>담당</th>
+                    <th>팀장</th>
+                    <th>부장</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="stamp-row">
+                    <td class="stamp-cell"></td>
+                    <td class="stamp-cell"></td>
+                    <td class="stamp-cell"></td>
+                </tr>
+                <tr class="date-row">
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 기본 정보 -->
+    <div class="basic-info">
+        <table class="info-table">
+            <tr>
+                <th>요청일자</th>
+                <td x-text="new Date().toLocaleDateString('ko-KR')"></td>
+                <th>요청부서</th>
+                <td x-text="currentDoc.department || ''"></td>
+            </tr>
+            <tr>
+                <th>요청자</th>
+                <td x-text="currentDoc.requestor || ''"></td>
+                <th>납품요청일</th>
+                <td x-text="currentDoc.deliveryDate || ''"></td>
+            </tr>
+            <tr>
+                <th>공급업체</th>
+                <td x-text="currentDoc.vendor || ''"></td>
+                <th>결제조건</th>
+                <td x-text="currentDoc.paymentTerms || ''"></td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- 구매 품목 -->
+    <div class="items-section">
+        <h3>구매 품목</h3>
+        <table class="items-table">
+            <thead>
+                <tr>
+                    <th style="width: 5%">No</th>
+                    <th style="width: 30%">품목명</th>
+                    <th style="width: 20%">규격</th>
+                    <th style="width: 10%">수량</th>
+                    <th style="width: 10%">단위</th>
+                    <th style="width: 12%">단가</th>
+                    <th style="width: 13%">금액</th>
+                </tr>
+            </thead>
+            <tbody>
+                <template x-if="currentDoc.items && currentDoc.items.length > 0">
+                    <template x-for="(item, index) in currentDoc.items" :key="index">
+                        <tr>
+                            <td x-text="index + 1"></td>
+                            <td x-text="item.name || ''"></td>
+                            <td x-text="item.spec || ''"></td>
+                            <td x-text="item.quantity || ''"></td>
+                            <td x-text="item.unit || ''"></td>
+                            <td x-text="formatCurrency(item.unitPrice || 0)"></td>
+                            <td x-text="formatCurrency((item.quantity || 0) * (item.unitPrice || 0))"></td>
+                        </tr>
+                    </template>
+                </template>
+                <template x-if="!currentDoc.items || currentDoc.items.length === 0">
+                    <tr>
+                        <td colspan="7" class="empty-row">구매 품목을 입력해주세요</td>
+                    </tr>
+                </template>
+            </tbody>
+            <tfoot>
+                <tr>
+                    <th colspan="6">합계</th>
+                    <th x-text="formatCurrency(calculatePurchaseTotal())"></th>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+
+    <!-- 구매 사유 -->
+    <div class="reason-section">
+        <h3>구매 사유</h3>
+        <div class="reason-content" x-text="currentDoc.reason || '구매 사유를 입력해주세요'"></div>
+    </div>
+
+    <!-- 특기사항 -->
+    <div class="notes-section">
+        <h3>특기사항</h3>
+        <div class="notes-content" x-text="currentDoc.notes || ''"></div>
+    </div>
+
+    <!-- 서명란 -->
+    <div class="signature-section">
+        <table class="signature-table">
+            <tr>
+                <td class="signature-label">요청자:</td>
+                <td class="signature-field" x-text="currentDoc.requestor || ''"></td>
+                <td class="signature-sign">(서명)</td>
+                <td class="signature-label">일자:</td>
+                <td class="signature-field" x-text="new Date().toLocaleDateString('ko-KR')"></td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+<style>
+.purchase-order-form {
+    padding: 20px;
+    font-family: 'Malgun Gothic', sans-serif;
+}
+
+.purchase-order-form .form-header {
+    text-align: center;
+    margin-bottom: 20px;
+    position: relative;
+}
+
+.purchase-order-form h1 {
+    font-size: 24px;
+    margin: 0;
+}
+
+.purchase-order-form .doc-number {
+    position: absolute;
+    right: 0;
+    top: 0;
+    font-size: 12px;
+}
+
+.purchase-order-form table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+.purchase-order-form th,
+.purchase-order-form td {
+    border: 1px solid #ccc;
+    padding: 8px;
+    text-align: left;
+}
+
+.purchase-order-form th {
+    background-color: #f5f5f5;
+    font-weight: bold;
+}
+
+.purchase-order-form .approval-table {
+    width: 300px;
+    margin-left: auto;
+    margin-bottom: 30px;
+}
+
+.purchase-order-form .stamp-cell {
+    height: 60px;
+    text-align: center;
+}
+
+.purchase-order-form .empty-row {
+    text-align: center;
+    color: #999;
+    padding: 20px;
+}
+
+.purchase-order-form .reason-content,
+.purchase-order-form .notes-content {
+    border: 1px solid #ccc;
+    padding: 10px;
+    min-height: 60px;
+    background-color: #fafafa;
+}
+
+.purchase-order-form .signature-table {
+    width: auto;
+    margin-top: 30px;
+}
+
+.purchase-order-form .signature-table td {
+    border: none;
+    padding: 5px 10px;
+}
+
+.purchase-order-form .signature-label {
+    font-weight: bold;
+}
+
+.purchase-order-form .signature-field {
+    border-bottom: 1px solid #333;
+    min-width: 100px;
+}
+
+@media print {
+    .purchase-order-form {
+        font-size: 11pt;
+    }
+}
+</style>

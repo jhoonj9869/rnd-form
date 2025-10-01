@@ -1,0 +1,30 @@
+{
+  "expense-report": {
+    "id": "expense-report",
+    "name": "지출결의서",
+    "displayName": "지출결의서",
+    "template": "forms/expense-report/template.html",
+    "icon": "💰",
+    "description": "경비 및 지출 결의를 위한 양식",
+    "fields": {
+      "title": "제목",
+      "department": "부서",
+      "applicant": "신청자",
+      "items": "지출항목",
+      "total": "총액"
+    },
+    "isDefault": true,
+    "source": "local"
+  },
+  "coming-soon": {
+    "id": "coming-soon",
+    "name": "양식 (준비중)",
+    "displayName": "양식 (준비중)",
+    "template": "forms/coming-soon/template.html",
+    "icon": "🚧",
+    "description": "새로운 양식을 준비 중입니다",
+    "fields": {},
+    "isComingSoon": true,
+    "source": "local"
+  }
+}

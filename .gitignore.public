@@ -1,0 +1,43 @@
+# 공개 저장소용 .gitignore
+
+# Dependencies
+node_modules/
+package-lock.json
+
+# Build output
+build/
+dist/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Security - 절대 포함 금지!
+client_secret*.json
+*.enc
+secure-config.js
+google-drive.backup.js
+config/
+
+# Private files
+*.private.*
+*.secret.*
+
+# Temporary files
+*.tmp
+~$*

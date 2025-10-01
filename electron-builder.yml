@@ -1,0 +1,43 @@
+appId: com.nexteam.rndform
+productName: RND Form
+directories:
+  output: dist
+  buildResources: build
+
+files:
+  - electron/**/*
+  - build/**/*
+  - package.json
+  - "!**/*.map"
+  - "!**/node_modules/*/{CHANGELOG.md,README.md,README,readme.md,readme}"
+  - "!**/node_modules/*/{test,__tests__,tests,powered-test,example,examples}"
+
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+  icon: src/assets/icon.ico
+  publisherName: "NextE&M"
+  certificateSubjectName: "NextE&M"
+  requestedExecutionLevel: asInvoker
+
+nsis:
+  oneClick: false
+  allowElevation: true
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: "RND Form"
+  installerIcon: src/assets/icon.ico
+  uninstallerIcon: src/assets/icon.ico
+  installerHeaderIcon: src/assets/icon.ico
+  deleteAppDataOnUninstall: false
+  differentialPackage: true
+
+publish:
+  - provider: github
+    owner: jhoonj9869
+    repo: rnd-form
+    releaseType: release
+    token: ${GH_TOKEN}

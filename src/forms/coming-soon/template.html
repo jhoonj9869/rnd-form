@@ -1,0 +1,133 @@
+<!-- 준비중 양식 템플릿 -->
+<div class="doc-header">
+    <h1 class="doc-title">양식 준비 중</h1>
+    <div class="doc-info">
+        <div class="doc-number">
+            <span class="label">문서번호:</span>
+            <span class="value" x-text="currentDoc?.docNumber || ''"></span>
+        </div>
+        <div class="doc-date">
+            <span class="label">작성일:</span>
+            <span class="value" x-text="currentDoc?.date || ''"></span>
+        </div>
+    </div>
+</div>
+
+<div class="doc-content">
+    <div class="coming-soon-notice">
+        <div class="notice-icon">🚧</div>
+        <div class="notice-content">
+            <h2>새로운 양식을 준비 중입니다</h2>
+            <p>이 양식은 현재 개발 중입니다.<br>
+            곧 업데이트를 통해 제공될 예정이니 조금만 기다려주세요.</p>
+
+            <div class="placeholder-info">
+                <h3>향후 추가 예정 양식:</h3>
+                <ul>
+                    <li>구매요청서</li>
+                    <li>출장보고서</li>
+                    <li>휴가신청서</li>
+                    <li>기타 업무 양식</li>
+                </ul>
+            </div>
+
+            <div class="contact-info">
+                <p><strong>문의사항</strong><br>
+                새로운 양식이 필요하시면 관리자에게 문의해주세요.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.coming-soon-notice {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    padding: 40px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 12px;
+    border: 2px dashed #dee2e6;
+    margin: 20px 0;
+    text-align: center;
+}
+
+.notice-icon {
+    font-size: 4rem;
+    opacity: 0.7;
+}
+
+.notice-content {
+    flex: 1;
+    text-align: left;
+}
+
+.notice-content h2 {
+    color: #495057;
+    margin-bottom: 15px;
+    font-size: 1.5rem;
+}
+
+.notice-content p {
+    color: #6c757d;
+    line-height: 1.6;
+    margin-bottom: 20px;
+}
+
+.placeholder-info {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    margin: 20px 0;
+    border-left: 4px solid #007bff;
+}
+
+.placeholder-info h3 {
+    color: #495057;
+    margin-bottom: 10px;
+    font-size: 1.1rem;
+}
+
+.placeholder-info ul {
+    list-style: none;
+    padding: 0;
+}
+
+.placeholder-info li {
+    padding: 5px 0;
+    color: #6c757d;
+    position: relative;
+    padding-left: 20px;
+}
+
+.placeholder-info li:before {
+    content: "📋";
+    position: absolute;
+    left: 0;
+}
+
+.contact-info {
+    background: #fff3cd;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #ffeaa7;
+    margin-top: 20px;
+}
+
+.contact-info p {
+    margin: 0;
+    color: #856404;
+}
+
+@media (max-width: 768px) {
+    .coming-soon-notice {
+        flex-direction: column;
+        text-align: center;
+        padding: 20px;
+    }
+
+    .notice-content {
+        text-align: center;
+    }
+}
+</style>

@@ -1,0 +1,137 @@
+<!-- 새 양식 템플릿 예시 - 이 파일을 복사해서 새 양식 만들기 -->
+
+<!-- 공통 헤더 (문서번호) -->
+<div class="doc-header">
+    <span class="doc-number" x-text="currentDoc.docNumber"></span>
+</div>
+
+<!-- 공통 제목과 결재란 -->
+<div class="title-approval-container">
+    <h1 class="doc-title">새 양식 제목</h1>
+
+    <div class="approval-box">
+        <table>
+            <thead>
+                <tr>
+                    <th rowspan="2">결재</th>
+                    <th>담당자</th>
+                    <th>검토자</th>
+                    <th>승인자</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="sign-area"></td>
+                    <td class="sign-area"></td>
+                    <td class="sign-area"></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- 공통 기본 정보 -->
+<div class="doc-info">
+    <table class="info-table">
+        <tbody>
+            <tr>
+                <th>제목</th>
+                <td colspan="3" x-text="currentDoc.title"></td>
+            </tr>
+            <tr>
+                <th>부서</th>
+                <td x-text="currentDoc.department"></td>
+                <th>신청자</th>
+                <td x-text="currentDoc.requester"></td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- ============================================= -->
+<!-- 여기부터 양식별 커스텀 영역 - 자유롭게 수정 -->
+<!-- ============================================= -->
+<div class="doc-content">
+
+    <!-- 예시: 양식별 추가 정보 테이블 -->
+    <table class="info-table">
+        <tbody>
+            <tr>
+                <th>항목1</th>
+                <td x-text="currentDoc.field1"></td>
+                <th>항목2</th>
+                <td x-text="currentDoc.field2"></td>
+            </tr>
+            <tr>
+                <th>설명</th>
+                <td colspan="3">
+                    <textarea x-model="currentDoc.description"
+                              style="width: 100%; min-height: 100px;"></textarea>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- 예시: 품목 테이블 -->
+    <div class="items-section" x-show="currentDoc.items && currentDoc.items.length > 0">
+        <h3>상세 내역</h3>
+        <table class="items-table">
+            <thead>
+                <tr>
+                    <th style="width: 50px;">번호</th>
+                    <th>항목명</th>
+                    <th style="width: 100px;">수량</th>
+                    <th style="width: 150px;">단가</th>
+                    <th style="width: 150px;">금액</th>
+                </tr>
+            </thead>
+            <tbody>
+                <template x-for="(item, index) in currentDoc.items" :key="'item-' + index">
+                    <tr>
+                        <td x-text="index + 1"></td>
+                        <td x-text="item.description"></td>
+                        <td x-text="item.quantity"></td>
+                        <td x-text="formatCurrency(item.unitPrice)"></td>
+                        <td x-text="formatCurrency(item.quantity * item.unitPrice)"></td>
+                    </tr>
+                </template>
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="4">합계</td>
+                    <td x-text="formatCurrency(itemsTotal)"></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+
+    <!-- 예시: 비고 -->
+    <div class="notes-section" x-show="currentDoc.notes">
+        <h3>비고</h3>
+        <p x-text="currentDoc.notes"></p>
+    </div>
+
+</div>
+<!-- ============================================= -->
+<!-- 커스텀 영역 끝 -->
+<!-- ============================================= -->
+
+<!-- 공통 하단 서명 -->
+<div class="doc-footer">
+    <p class="submit-text">위 내용을 확인합니다.</p>
+    <p class="submit-date" x-text="formatDate(currentDoc.submitDate)"></p>
+    <p class="submitter">
+        <span x-show="currentDoc.submitterTitle" x-text="currentDoc.submitterTitle"></span>
+        <span x-text="currentDoc.submitterName || currentDoc.requester"></span>
+        <span class="sign-placeholder">(인)</span>
+    </p>
+</div>
+
+<!--
+사용법:
+1. 이 파일을 복사해서 새 폴더에 저장 (예: src/forms/my-form/template.html)
+2. "새 양식 제목" 부분을 원하는 제목으로 변경
+3. doc-content 영역 안의 내용을 원하는 구조로 변경
+4. form-config.json에 새 양식 설정 추가
+5. 공통 스타일은 common-styles.css 사용, 추가 스타일은 별도 CSS 파일 생성
+-->

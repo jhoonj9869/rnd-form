@@ -1,0 +1,161 @@
+<!-- 도장 및 첨부파일 UI 컴포넌트 -->
+
+<!-- 도장 관리 섹션 -->
+<div class="stamp-section" style="margin-top: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 8px;">
+    <h3 style="margin-top: 0; color: #333;">📋 도장 관리</h3>
+
+    <!-- 도장 업로드 -->
+    <div class="stamp-upload" style="margin-bottom: 15px;">
+        <label class="btn btn-sm btn-primary" style="cursor: pointer; background: #007bff; color: white; padding: 6px 12px; border-radius: 4px; display: inline-block;">
+            <input type="file"
+                   accept="image/*"
+                   @change="uploadStamp($event)"
+                   style="display: none;">
+            ➕ 도장 추가
+        </label>
+
+        <!-- 도장 목록 표시 -->
+        <div class="stamps-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 10px; margin-top: 15px;">
+            <template x-for="stamp in stamps" :key="stamp.id">
+                <div class="stamp-item"
+                     style="border: 2px solid #e0e0e0; border-radius: 8px; padding: 8px; text-align: center; cursor: pointer; position: relative;"
+                     :class="{'selected': selectedStampId === stamp.id}"
+                     @click="selectStamp(stamp.id)">
+                    <img :src="stamp.dataUrl"
+                         :alt="stamp.name"
+                         style="width: 60px; height: 60px; object-fit: contain;">
+                    <div style="font-size: 11px; margin-top: 4px; word-break: break-all;" x-text="stamp.name"></div>
+                    <button @click.stop="deleteStamp(stamp.id)"
+                            style="position: absolute; top: 2px; right: 2px; background: red; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; cursor: pointer; font-size: 10px;">
+                        ✕
+                    </button>
+                </div>
+            </template>
+        </div>
+
+        <!-- 도장 적용 버튼 -->
+        <div class="stamp-actions" style="margin-top: 15px;">
+            <button @click="applyStampToSignature('signature-area-1')"
+                    class="btn btn-sm btn-success"
+                    style="background: #28a745; color: white; padding: 6px 12px; border-radius: 4px; margin-right: 5px;">
+                결재란에 도장 적용
+            </button>
+            <button @click="removeStampFromSignature('signature-area-1')"
+                    class="btn btn-sm btn-danger"
+                    style="background: #dc3545; color: white; padding: 6px 12px; border-radius: 4px;">
+                도장 제거
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- 첨부파일 섹션 -->
+<div class="attachment-section" style="margin-top: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 8px;">
+    <h3 style="margin-top: 0; color: #333;">📎 첨부파일</h3>
+
+    <!-- 파일 업로드 영역 -->
+    <div class="file-upload-area"
+         style="border: 2px dashed #ccc; border-radius: 8px; padding: 20px; text-align: center; background: #f9f9f9;">
+
+        <label class="btn btn-sm btn-primary" style="cursor: pointer; background: #007bff; color: white; padding: 8px 16px; border-radius: 4px; display: inline-block;">
+            <input type="file"
+                   multiple
+                   @change="uploadFiles($event)"
+                   style="display: none;">
+            📁 파일 선택
+        </label>
+
+        <p style="margin: 10px 0; color: #666; font-size: 14px;">
+            또는 여기에 파일을 드래그 앤 드롭하세요
+        </p>
+
+        <div style="font-size: 12px; color: #999;">
+            최대 파일 크기: 10MB | 지원 형식: 이미지, PDF, Word, Excel, 텍스트
+        </div>
+    </div>
+
+    <!-- 첨부파일 목록 -->
+    <div class="attachments-list" style="margin-top: 15px;" x-show="attachments.length > 0">
+        <h4 style="font-size: 14px; margin-bottom: 10px;">첨부된 파일 (<span x-text="attachments.length"></span>)</h4>
+
+        <div class="attachment-items">
+            <template x-for="attachment in attachments" :key="attachment.id">
+                <div class="attachment-item"
+                     style="display: flex; align-items: center; padding: 8px; border: 1px solid #e0e0e0; border-radius: 4px; margin-bottom: 8px; background: white;">
+
+                    <!-- 파일 아이콘 -->
+                    <span style="font-size: 24px; margin-right: 10px;" x-text="getFileIcon(attachment.type)"></span>
+
+                    <!-- 파일 정보 -->
+                    <div style="flex: 1;">
+                        <div style="font-weight: 500; font-size: 14px;" x-text="attachment.name"></div>
+                        <div style="font-size: 12px; color: #666;">
+                            <span x-text="formatFileSize(attachment.size)"></span>
+                            • <span x-text="new Date(attachment.uploadedAt).toLocaleString()"></span>
+                        </div>
+                    </div>
+
+                    <!-- 액션 버튼들 -->
+                    <div style="display: flex; gap: 5px;">
+                        <button @click="previewAttachment(attachment)"
+                                class="btn btn-xs"
+                                style="padding: 4px 8px; font-size: 12px; background: #17a2b8; color: white; border: none; border-radius: 3px; cursor: pointer;"
+                                x-show="attachment.type.startsWith('image/') || attachment.type === 'application/pdf'">
+                            👁️ 미리보기
+                        </button>
+                        <button @click="downloadAttachment(attachment)"
+                                class="btn btn-xs"
+                                style="padding: 4px 8px; font-size: 12px; background: #6c757d; color: white; border: none; border-radius: 3px; cursor: pointer;">
+                            ⬇️ 다운로드
+                        </button>
+                        <button @click="deleteAttachment(attachment.id)"
+                                class="btn btn-xs"
+                                style="padding: 4px 8px; font-size: 12px; background: #dc3545; color: white; border: none; border-radius: 3px; cursor: pointer;">
+                            🗑️ 삭제
+                        </button>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </div>
+
+    <!-- 첨부파일이 없을 때 -->
+    <div x-show="attachments.length === 0" style="text-align: center; padding: 20px; color: #999; font-size: 14px;">
+        첨부된 파일이 없습니다
+    </div>
+</div>
+
+<style>
+/* 도장 선택 상태 스타일 */
+.stamp-item.selected {
+    border-color: #007bff !important;
+    background-color: #e7f3ff;
+}
+
+/* 드래그 오버 스타일 */
+.file-upload-area.drag-over {
+    background-color: #e7f3ff !important;
+    border-color: #007bff !important;
+}
+
+/* 버튼 호버 효과 */
+.btn:hover {
+    opacity: 0.9;
+}
+
+.btn-xs:hover {
+    opacity: 0.9;
+}
+
+/* 첨부파일 아이템 호버 */
+.attachment-item:hover {
+    background-color: #f8f9fa !important;
+}
+
+/* 반응형 그리드 */
+@media (max-width: 768px) {
+    .stamps-grid {
+        grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)) !important;
+    }
+}
+</style>

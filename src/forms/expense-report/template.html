@@ -1,0 +1,129 @@
+<!-- 지출결의서 템플릿 -->
+<div class="doc-header">
+    <span class="doc-number" x-text="currentDoc.docNumber"></span>
+</div>
+
+<!-- 제목과 결재란을 같은 줄에 배치 -->
+<div class="title-approval-container">
+    <h1 class="doc-title">지출결의서</h1>
+
+    <!-- 결재란 -->
+    <div class="approval-box">
+    <table>
+        <thead>
+            <tr>
+                <th rowspan="2">결재</th>
+                <th>지출담당자</th>
+                <th>결재권자</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="sign-area"></td>
+                <td class="sign-area"></td>
+            </tr>
+        </tbody>
+    </table>
+    </div>
+</div>
+
+<!-- 기본 정보 -->
+<div class="doc-content">
+    <table class="info-table">
+        <tbody>
+            <tr>
+                <th>제목</th>
+                <td colspan="3" x-text="currentDoc.title"></td>
+            </tr>
+            <tr>
+                <th>사용처</th>
+                <td x-text="currentDoc.department"></td>
+                <th>사용자</th>
+                <td x-text="currentDoc.requester"></td>
+            </tr>
+            <tr>
+                <th>지출과목</th>
+                <td x-text="getCategoryLabel(currentDoc.category)"></td>
+                <th>지출방법</th>
+                <td x-text="getPaymentMethodLabel(currentDoc.paymentMethod)"></td>
+            </tr>
+            <tr>
+                <th>구입처</th>
+                <td x-text="currentDoc.vendor"></td>
+                <th>구입일자</th>
+                <td x-text="formatDate(currentDoc.purchaseDate)"></td>
+            </tr>
+            <tr>
+                <th>지출금액</th>
+                <td colspan="3">
+                    <span x-text="toKoreanAmount(currentDoc.amount)"></span>
+                    (<span x-text="formatCurrency(currentDoc.amount)"></span>)
+                    <span x-show="currentDoc.vatIncluded" class="vat-label">VAT 포함</span>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- 통합 품목 상세 테이블 -->
+    <div class="items-section" x-show="(currentDoc.items && currentDoc.items.length > 0) || (currentDoc.free && currentDoc.free.entries && currentDoc.free.entries.length > 0)">
+        <h3>품목 상세</h3>
+        <table class="items-table">
+            <thead>
+                <tr>
+                    <th style="width: 50px;">번호</th>
+                    <th>품목명</th>
+                    <th style="width: 80px;">수량</th>
+                    <th style="width: 120px;">단가</th>
+                    <th style="width: 120px;">금액</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- 일반 품목 -->
+                <template x-for="(item, index) in currentDoc.items" :key="'item-' + index">
+                    <tr>
+                        <td x-text="index + 1"></td>
+                        <td x-text="item.description"></td>
+                        <td x-text="item.quantity"></td>
+                        <td x-text="formatCurrency(item.unitPrice)"></td>
+                        <td x-text="formatCurrency(item.quantity * item.unitPrice)"></td>
+                    </tr>
+                </template>
+
+                <!-- 구분선 제거 - 하나의 연속된 테이블로 표시 -->
+
+                <!-- 자유입력 항목 -->
+                <template x-for="(entry, index) in (currentDoc.free && currentDoc.free.entries) || []" :key="'free-' + index">
+                    <tr>
+                        <td x-text="(currentDoc.items ? currentDoc.items.length : 0) + index + 1"></td>
+                        <td x-text="entry.label"></td>
+                        <td colspan="2" style="text-align: center; color: #6b7280;" x-text="entry.description || '-'"></td>
+                        <td x-text="formatCurrency(entry.amount || 0)"></td>
+                    </tr>
+                </template>
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="4">합계</td>
+                    <td x-text="formatCurrency((currentDoc.totals && currentDoc.totals.grandTotal) || itemsTotal || 0)"></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+
+    <!-- 비고 -->
+    <div class="notes-section" x-show="currentDoc.notes">
+        <h3>비고</h3>
+        <p x-text="currentDoc.notes"></p>
+    </div>
+</div>
+
+<!-- 하단 서명 -->
+<div class="doc-footer">
+    <p class="submit-text">위 금액을 정히 청구합니다.</p>
+    <p class="submit-date" x-text="formatDate(currentDoc.submitDate)"></p>
+    <p class="submitter">
+        <span x-show="currentDoc.submitterTitle" x-text="currentDoc.submitterTitle"></span>
+        <span x-text="currentDoc.submitterName"></span>
+        <span class="sign-placeholder">(인)</span>
+    </p>
+</div>

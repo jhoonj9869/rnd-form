@@ -1,0 +1,62 @@
+# 공개 저장소용 .gitignore
+
+# Dependencies
+node_modules/
+# package-lock.json은 커밋 (Electron 앱 버전 일관성 위해)
+
+# Build output
+build/
+dist/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Security - 절대 포함 금지!
+client_secret*.json
+*.enc
+secure-config.js
+google-drive.backup.js
+config/
+
+# Private files
+*.private.*
+*.secret.*
+
+# Temporary files
+*.tmp
+~$*
+
+# Reference documents (참고용 문서)
+*.pdf
+*.jpg
+*.jpeg
+*.png
+*.PNG
+*.xlsx
+*.xlsm
+*.xltm
+스마트*.pdf
+지출결의서*
+캡처.PNG
+
+# Git backup
+.git.backup/
+
+# Release repository
+release-repo/

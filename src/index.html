@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>스마트 문서 작성기</title>
+    <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/forms/expense-report/style.css">
+    <link rel="stylesheet" href="/css/print.css" media="print">
+    <script type="module" src="/js/app.js"></script>
+</head>
+<body>
+    <div id="app" x-data="expenseApp" x-init="init()">
+        <!-- 헤더 영역 -->
+        <header class="app-header">
+            <div class="header-left">
+                <h1>스마트 문서 작성기</h1>
+            </div>
+            <div class="header-right">
+                <button @click="newDocument()" class="btn btn-primary">
+                    새 문서
+                </button>
+                <button @click="saveDocument()" class="btn btn-success">
+                    저장 (Ctrl+S)
+                </button>
+                <button @click="printDocument()" class="btn btn-secondary">
+                    인쇄 (Ctrl+P)
+                </button>
+
+                <!-- 동기화 상태 표시 -->
+                <span style="margin-left: 20px; font-size: 12px; color: #666;">
+                    <!-- 저장 상태 표시 -->
+                    <span x-show="!isDocumentSaved" style="color: #ff6b6b; font-weight: bold;">
+                        ⚠️ 저장 필요
+                    </span>
+                    <span x-show="isDocumentSaved" style="color: #51cf66; font-weight: bold;">
+                        ✅ 저장됨
+                    </span>
+
+                    <!-- 동기화 상태 (동기화 중일 때만 표시) -->
+                    <span x-show="syncStatus.cloud === 'syncing'">☁️ 동기화중...</span>
+                    <span x-show="syncStatus.cloud === 'offline'">⚠️ 오프라인</span>
+                </span>
+
+                <div class="google-drive-controls" style="display: inline-flex; gap: 10px; margin-left: 20px;">
+                    <button x-show="!googleDriveAuth"
+                            @click="googleDriveLogin()"
+                            class="btn btn-info"
+                            style="background: #4285f4; border-color: #4285f4;">
+                        🔗 구글드라이브 연결
+                    </button>
+                    <button x-show="googleDriveAuth"
+                            @click="saveToCloud()"
+                            class="btn btn-warning">
+                        💾 클라우드 저장
+                    </button>
+                    <button x-show="googleDriveAuth"
+                            @click="syncWithExplanation()"
+                            class="btn btn-success"
+                            title="Google Drive와 동기화">
+                        ☁️ 동기화
+                    </button>
+                    <button x-show="googleDriveAuth"
+                            @click="googleDriveLogout()"
+                            class="btn btn-secondary">
+                        로그아웃
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- 메인 3컬럼 레이아웃 -->
+        <main class="app-main">
+            <!-- 왼쪽 사이드바 -->
+            <aside class="sidebar-left">
+                <!-- 양식 목록 -->
+                <section class="form-list">
+                    <h2>양식 목록</h2>
+                    <button @click.stop="refreshFormList()"
+                            class="btn btn-sm btn-info"
+                            style="margin-bottom: 10px; width: 100%;">
+                        🔄 양식 목록 새로고침
+                    </button>
+                    <ul>
+                        <template x-for="form in availableForms" :key="form.id">
+                            <li :class="{'active': currentFormType === form.id}"
+                                @click="switchForm(form.id)"
+                                style="cursor: pointer;">
+                                <span class="icon" x-text="getFormIcon(form.id)"></span>
+                                <span x-text="form.name"></span>
+                            </li>
+                        </template>
+                    </ul>
+                </section>
+
+                <!-- 작업중 문서 섹션 -->
+                <section class="workspace-section">
+                    <div class="section-header">
+                        <h3>
+                            <span class="section-icon">✏️</span>
+                            작업중 문서
+                        </h3>
+                        <span class="doc-count" x-text="workspaceDocument ? '(1)' : '(0)'"></span>
+                    </div>
+                    <div class="workspace-view" style="min-height: 60px; max-height: 100px;">
+                        <template x-if="workspaceDocument">
+                            <div class="explorer-item workspace-doc"
+                                 @click="loadDocument(workspaceDocument.id)"
+                                 :class="{'selected': selectedDocId === workspaceDocument.id}"
+                                 :title="(workspaceDocument.docNumber || '새 문서') + ' - ' + getRelativeTime(workspaceDocument.lastSaved)"
+                                 style="cursor: pointer; padding: 10px;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <span class="file-icon">✏️</span>
+                                    <div style="flex: 1; overflow: hidden;">
+                                        <div style="display: flex; flex-direction: column;">
+                                            <span class="doc-number" x-text="workspaceDocument.docNumber || '번호 없음'"
+                                                  style="display: inline-block; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"></span>
+                                            <span class="doc-id" x-text="'(' + (workspaceDocument.id || 'ID 없음') + ')'"
+                                                  style="font-size: 0.75em; color: #888; margin-top: 2px; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style="font-size: 0.85em; color: #999; margin-top: 6px; padding: 0 4px; display: flex; justify-content: flex-end;">
+                                    <!-- 문서 출처와 저장 시간 통합 표시 -->
+                                    <span>
+                                        <template x-if="workspaceDocument.isFromCloud">
+                                            <span>☁️ 클라우드</span>
+                                        </template>
+                                        <template x-if="!workspaceDocument.isFromCloud">
+                                            <span>💾 임시</span>
+                                        </template>
+                                        <span style="margin: 0 6px;">|</span>
+                                        <span x-text="getRelativeTime(workspaceDocument.lastSaved)"></span>
+                                    </span>
+                                </div>
+                            </div>
+                        </template>
+                        <div x-show="!workspaceDocument" class="empty-workspace" style="padding: 20px; text-align: center; color: #666;">
+                            <span>작업중인 문서가 없습니다</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 클라우드 문서 섹션 -->
+                <section class="document-list" style="margin-top: 20px;">
+                    <div class="section-header">
+                        <h3>
+                            <span class="section-icon">☁️</span>
+                            클라우드 문서
+                        </h3>
+                        <span class="doc-count" x-show="filteredCacheDocuments.length > 0"
+                              x-text="`(${filteredCacheDocuments.length})`"></span>
+                    </div>
+                    <div class="search-box">
+                        <input type="text"
+                               x-model="searchQuery"
+                               @input="searchDocuments()"
+                               placeholder="🔍 제목, 문서번호로 검색..."
+                               class="search-input">
+                    </div>
+                    <div class="explorer-view">
+                        <!-- 테이블 헤더 -->
+                        <div class="explorer-header">
+                            <span class="col-docnumber">문서번호</span>
+                            <span class="col-date">수정한 날짜</span>
+                        </div>
+                        <!-- 문서 목록 -->
+                        <div class="explorer-list">
+                            <template x-for="doc in filteredCacheDocuments" :key="doc.id">
+                                <div class="explorer-item cache-doc"
+                                     @click="handleCacheDocClick(doc)"
+                                     @dblclick="!doc.isBeingEdited && editCloudDocument(doc.id)"
+                                     @contextmenu.prevent="!doc.isBeingEdited && showContextMenu(doc.id, $event)"
+                                     :class="{
+                                         'selected': selectedDocId === doc.id,
+                                         'being-edited': doc.isBeingEdited
+                                     }"
+                                     :title="(doc.title || '제목 없음') + ' - ' + (doc.docNumber || '번호 없음')">
+                                    <span class="col-docnumber">
+                                        <span class="file-icon">
+                                            <template x-if="doc.isBeingEdited">
+                                                <span>🔄</span>
+                                            </template>
+                                            <template x-if="!doc.isBeingEdited">
+                                                <span>📄</span>
+                                            </template>
+                                        </span>
+                                        <div style="display: flex; flex-direction: column; margin-left: 4px;">
+                                            <span class="doc-number" x-text="doc.docNumber || '(번호 없음)'"
+                                                  style="display: inline-block; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"></span>
+                                            <span class="doc-id" x-text="'(' + (doc.id || 'ID 없음') + ')'"
+                                                  style="font-size: 0.7em; color: #888; margin-top: 1px; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"></span>
+                                        </div>
+                                    </span>
+                                    <span class="col-date" x-text="formatDate(doc.date)"></span>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+
+                    <!-- 빈 상태 메시지 -->
+                    <div x-show="filteredCacheDocuments.length === 0" class="empty-state-container">
+                        <div class="empty-icon">☁️</div>
+                        <div class="empty-message">
+                            <p class="empty-title">클라우드 문서가 없습니다</p>
+                            <p class="empty-subtitle">
+                                <span x-show="searchQuery">검색 결과가 없습니다</span>
+                                <span x-show="!searchQuery">클라우드에 저장하면 여기에 표시됩니다</span>
+                            </p>
+                        </div>
+                    </div>
+                </section>
+            </aside>
+
+            <!-- 중앙 미리보기 영역 -->
+            <section class="preview-area">
+                <!-- 메인화면 초기화 상태 (v2.5.0) -->
+                <div x-show="showBlankPaper" class="main-screen-container">
+                    <div class="blank-paper">
+                        <div class="paper-placeholder">
+                            <div class="paper-icon">📄</div>
+                            <p class="paper-message">새 문서를 시작하세요</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 기존 문서 미리보기 -->
+                <div x-show="!showBlankPaper" class="preview-container">
+                    <div class="preview-paper">
+                        <!-- 문서번호 -->
+                        <div class="doc-header">
+                            <span class="doc-number" x-text="currentDoc?.docNumber || ''"></span>
+                        </div>
+
+                        <!-- 제목과 결재란을 같은 줄에 배치 -->
+                        <div class="title-approval-container">
+                            <!-- 제목 -->
+                            <h1 class="doc-title">지출결의서</h1>
+
+                            <!-- 결재란 -->
+                            <div class="approval-box">
+                            <table>
+                                <tr>
+                                    <th rowspan="2">결재</th>
+                                    <th>지출담당자</th>
+                                    <th>결재권자</th>
+                                </tr>
+                                <tr>
+                                    <td class="sign-area"></td>
+                                    <td class="sign-area"></td>
+                                </tr>
+                            </table>
+                            </div>
+                        </div>
+
+                        <!-- 본문 내용 -->
+                        <div class="doc-content">
+                            <table class="info-table">
+                                <tr>
+                                    <th>제목</th>
+                                    <td colspan="3" x-text="currentDoc?.title || ''"></td>
+                                </tr>
+                                <tr>
+                                    <th>사용처</th>
+                                    <td x-text="currentDoc?.department || ''"></td>
+                                    <th>사용자</th>
+                                    <td x-text="currentDoc?.requester || ''"></td>
+                                </tr>
+                                <tr>
+                                    <th>지출과목</th>
+                                    <td x-text="currentDoc?.category || ''"></td>
+                                    <th>지출방법</th>
+                                    <td x-text="currentDoc?.paymentMethod || ''"></td>
+                                </tr>
+                                <tr>
+                                    <th>구입처</th>
+                                    <td x-text="currentDoc?.vendor || ''"></td>
+                                    <th>구입일자</th>
+                                    <td x-text="formatDate(currentDoc?.purchaseDate)"></td>
+                                </tr>
+                                <tr>
+                                    <th>지출금액</th>
+                                    <td colspan="3">
+                                        <span x-text="toKoreanAmount(currentDoc?.amount || 0)"></span>
+                                        (<span x-text="formatCurrency(currentDoc?.amount || 0)"></span>)
+                                        <span x-show="currentDoc?.vatIncluded">VAT 포함</span>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <!-- 통합 품목 상세 테이블 -->
+                            <div class="items-section" x-show="(currentDoc?.items && currentDoc?.items.length > 0) || (currentDoc?.free && currentDoc?.free.entries && currentDoc?.free.entries.length > 0)">
+                                <h3>품목 상세</h3>
+                                <table class="items-table">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 50px">번호</th>
+                                            <th>품목명</th>
+                                            <th style="width: 80px">수량</th>
+                                            <th style="width: 120px">단가</th>
+                                            <th style="width: 120px">금액</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- 일반 품목 -->
+                                        <template x-for="(item, index) in (currentDoc?.items || [])" :key="'item-' + index">
+                                            <tr>
+                                                <td x-text="index + 1"></td>
+                                                <td x-text="item.description"></td>
+                                                <td x-text="item.quantity"></td>
+                                                <td x-text="formatCurrency(item.unitPrice)"></td>
+                                                <td x-text="formatCurrency(item.quantity * item.unitPrice)"></td>
+                                            </tr>
+                                        </template>
+
+                                        <!-- 구분선 제거 - 하나의 연속된 테이블로 표시 -->
+
+                                        <!-- 자유입력 항목 -->
+                                        <template x-for="(entry, index) in (currentDoc?.free && currentDoc?.free.entries) || []" :key="'free-' + index">
+                                            <tr>
+                                                <td x-text="(currentDoc?.items ? currentDoc?.items.length : 0) + index + 1"></td>
+                                                <td x-text="entry.label"></td>
+                                                <td colspan="2" style="text-align: center; color: #6b7280;" x-text="entry.description || '-'"></td>
+                                                <td x-text="formatCurrency(entry.amount || 0)"></td>
+                                            </tr>
+                                        </template>
+                                    </tbody>
+                                    <tfoot>
+                                        <tr>
+                                            <th colspan="4">합계</th>
+                                            <th x-text="formatCurrency((currentDoc?.totals && currentDoc?.totals.grandTotal) || itemsTotal || 0)"></th>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+
+                            <!-- 비고 -->
+                            <div class="notes-section" x-show="currentDoc?.notes">
+                                <h3>비고</h3>
+                                <p x-text="currentDoc?.notes || ''"></p>
+                            </div>
+                        </div>
+
+                        <!-- 하단 서명 -->
+                        <div class="doc-footer">
+                            <p class="submit-text">위 금액을 정히 청구합니다.</p>
+                            <p class="submit-date" x-text="formatDate(currentDoc?.submitDate)"></p>
+                            <p class="submitter">
+                                <span x-text="currentDoc?.submitterTitle || ''"></span>
+                                <span x-text="currentDoc?.submitterName || ''"></span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 오른쪽 입력 패널 -->
+            <aside class="sidebar-right" :class="{ 'readonly-mode': currentDoc?.isReadOnly }">
+                <div class="input-panel">
+                    <!-- 사용 가이드 (메인화면 초기화 상태) -->
+                    <div x-show="showUsageGuide" class="usage-guide">
+                        <div class="guide-header">
+                            <h3>🚀 시작하기</h3>
+                        </div>
+                        <div class="guide-content">
+                            <p x-text="guideContent"></p>
+
+                            <div class="guide-actions">
+                                <h4>💡 주요 기능</h4>
+                                <ul>
+                                    <li><strong>새 문서:</strong> 좌측 "새 문서" 버튼 또는 Ctrl+N</li>
+                                    <li><strong>문서 선택:</strong> 좌측 문서 목록에서 클릭</li>
+                                    <li><strong>양식 전환:</strong> 좌측 상단 양식 목록</li>
+                                    <li><strong>저장:</strong> Ctrl+S 또는 상단 저장 버튼</li>
+                                    <li><strong>인쇄:</strong> Ctrl+P 또는 상단 인쇄 버튼</li>
+                                </ul>
+
+                                <h4>☁️ 클라우드 연동</h4>
+                                <ul>
+                                    <li>구글드라이브 연결 후 자동 동기화</li>
+                                    <li>문서를 클라우드에 저장하여 팀과 공유</li>
+                                    <li>오프라인에서도 작업 가능</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 읽기 전용 알림 -->
+                    <div x-show="currentDoc?.isReadOnly" class="readonly-notice">
+                        <svg class="icon-lock" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="5" y="11" width="14" height="10" rx="2" ry="2"/>
+                            <path d="M7 11V7a5 5 0 0110 0v4"/>
+                        </svg>
+                        <span>읽기 전용 모드 (캐시 문서)</span>
+                        <button @click="editCloudDocument(currentDoc?.id)" class="btn-edit-inline">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                            </svg>
+                            수정하기
+                        </button>
+                    </div>
+
+                    <!-- 문서 입력 섹션 (currentDoc가 있을 때만 표시) -->
+                    <div x-show="currentDoc">
+                            <h2 style="display: flex; align-items: center; gap: 10px;">
+                                <span>문서 정보</span>
+                                <span x-show="currentDoc && currentDoc.id"
+                                      x-text="currentDoc && currentDoc.id ? '(' + currentDoc.id.substring(0, 8) + '...)' : ''"
+                                      style="font-size: 0.7em; color: #888; font-weight: normal;"
+                                      :title="currentDoc && currentDoc.id ? currentDoc.id : ''"></span>
+                            </h2>
+
+                            <!-- 기본 정보 -->
+                            <div class="form-section">
+                        <h3>기본 정보</h3>
+                        <div class="form-group">
+                            <label for="docNumber">문서번호</label>
+                            <input type="text" id="docNumber" x-model="currentDoc.docNumber" placeholder="YYYY-MM-DD-XXX"
+                                   :disabled="currentDoc.isReadOnly">
+                        </div>
+                        <div class="form-group">
+                            <label for="title">제목 *</label>
+                            <input type="text" id="title" x-model="currentDoc.title"
+                                   :disabled="currentDoc.isReadOnly" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="date">작성일자 *</label>
+                            <input type="date" id="date" x-model="currentDoc.date"
+                                   :disabled="currentDoc.isReadOnly" required>
+                        </div>
+                    </div>
+
+                    <!-- 양식별 필드 표시 -->
+                    <!-- 지출결의서 필드 -->
+                    <div class="form-section" x-show="currentFormType === 'expense-report'">
+                        <h3>지출 정보</h3>
+                        <div class="form-group">
+                            <label for="department">사용처 *</label>
+                            <input type="text" id="department" x-model="currentDoc.department"
+                                   :disabled="currentDoc.isReadOnly" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="requester">사용자 *</label>
+                            <input type="text" id="requester" x-model="currentDoc.requester"
+                                   :disabled="currentDoc.isReadOnly" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="category">지출과목 *</label>
+                            <select id="category" x-model="currentDoc.category"
+                                    :disabled="currentDoc.isReadOnly" required>
+                                <option value="">선택하세요</option>
+                                <option value="연구재료비">연구재료비</option>
+                                <option value="연구장비비">연구장비비</option>
+                                <option value="연구활동비">연구활동비</option>
+                                <option value="인건비">인건비</option>
+                                <option value="기타">기타</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="paymentMethod">지출방법 *</label>
+                            <select id="paymentMethod" x-model="currentDoc.paymentMethod"
+                                    :disabled="currentDoc.isReadOnly" required>
+                                <option value="">선택하세요</option>
+                                <option value="신용카드">신용카드</option>
+                                <option value="계좌이체">계좌이체</option>
+                                <option value="현금">현금</option>
+                                <option value="법인카드">법인카드</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="vendor">구입처 *</label>
+                            <input type="text" id="vendor" x-model="currentDoc.vendor"
+                                   :disabled="currentDoc.isReadOnly" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="purchaseDate">구입일자 *</label>
+                            <input type="date" id="purchaseDate" x-model="currentDoc.purchaseDate"
+                                   :disabled="currentDoc.isReadOnly" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="amount">지출금액 *</label>
+                            <input type="number" id="amount" x-model.number="currentDoc.amount"
+                                   @input="updateAmount()" min="0"
+                                   :disabled="currentDoc.isReadOnly" required>
+                            <div class="amount-korean" x-text="toKoreanAmount(currentDoc.amount)"></div>
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" x-model="currentDoc.vatIncluded"
+                                       :disabled="currentDoc.isReadOnly">
+                                VAT 포함
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- 구매요청서 필드 -->
+                    <div class="form-section" x-show="currentFormType === 'purchase-order'">
+                        <h3>구매요청 정보</h3>
+                        <div class="form-group">
+                            <label for="po-department">요청부서 *</label>
+                            <input type="text" id="po-department" x-model="currentDoc.department"
+                                   :disabled="currentDoc.isReadOnly" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="requestor">요청자 *</label>
+                            <input type="text" id="requestor" x-model="currentDoc.requestor"
+                                   :disabled="currentDoc.isReadOnly" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="po-vendor">공급업체 *</label>
+                            <input type="text" id="po-vendor" x-model="currentDoc.vendor"
+                                   :disabled="currentDoc.isReadOnly" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="deliveryDate">납품요청일 *</label>
+                            <input type="date" id="deliveryDate" x-model="currentDoc.deliveryDate"
+                                   :disabled="currentDoc.isReadOnly" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="paymentTerms">결제조건</label>
+                            <select id="paymentTerms" x-model="currentDoc.paymentTerms"
+                                    :disabled="currentDoc.isReadOnly">
+                                <option value="">선택하세요</option>
+                                <option value="선불">선불</option>
+                                <option value="월말결제">월말결제</option>
+                                <option value="납품후 30일">납품후 30일</option>
+                                <option value="납품후 60일">납품후 60일</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="po-reason">구매사유 *</label>
+                            <textarea id="po-reason" x-model="currentDoc.reason" rows="3"
+                                      :disabled="currentDoc.isReadOnly" required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="po-notes">특기사항</label>
+                            <textarea id="po-notes" x-model="currentDoc.notes" rows="2"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- 품목 상세 -->
+                    <!-- 지출결의서 품목 -->
+                    <div class="form-section" x-show="currentFormType === 'expense-report'">
+                        <h3>품목 상세</h3>
+                        <div class="items-input">
+                            <template x-for="(item, index) in (currentDoc?.items || [])" :key="'expense-item-' + index">
+                                <div class="item-row">
+                                    <input type="text" x-model="item.description" placeholder="품목명">
+                                    <input type="number" x-model.number="item.quantity"
+                                           @input="updateItem(index)" placeholder="수량" min="1">
+                                    <input type="number" x-model.number="item.unitPrice"
+                                           @input="updateItem(index)" placeholder="단가" min="0">
+                                    <span class="item-amount" x-text="formatCurrency(item.amount || 0)"></span>
+                                    <button @click="removeItem(index)" class="btn-remove">삭제</button>
+                                </div>
+                            </template>
+                            <button @click="addItem()" class="btn btn-add">품목 추가</button>
+                        </div>
+                    </div>
+
+                    <!-- 구매요청서 품목 -->
+                    <div class="form-section" x-show="currentFormType === 'purchase-order'">
+                        <h3>구매 품목</h3>
+                        <div class="items-input">
+                            <template x-for="(item, index) in (currentDoc?.items || [])" :key="'purchase-item-' + index">
+                                <div class="item-row">
+                                    <input type="text" x-model="item.name" placeholder="품목명">
+                                    <input type="text" x-model="item.spec" placeholder="규격">
+                                    <input type="number" x-model.number="item.quantity" placeholder="수량" min="1">
+                                    <input type="text" x-model="item.unit" placeholder="단위">
+                                    <input type="number" x-model.number="item.unitPrice" placeholder="단가" min="0">
+                                    <button @click="removeItem(index)" class="btn-remove">삭제</button>
+                                </div>
+                            </template>
+                            <button @click="addItem()" class="btn btn-add">품목 추가</button>
+                            <div class="total-amount">
+                                <strong>합계:</strong>
+                                <span x-text="formatCurrency(calculatePurchaseTotal())"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 자유입력 항목 -->
+                    <div class="form-section">
+                        <h3>자유입력 항목</h3>
+                        <div class="free-entries">
+                            <!-- 프리셋 버튼들 -->
+                            <div class="preset-chips">
+                                <button @click="addFreeEntry('회의비 일체')" class="chip">회의비 일체</button>
+                                <button @click="addFreeEntry('교통비')" class="chip">교통비</button>
+                                <button @click="addFreeEntry('잡비')" class="chip">잡비</button>
+                                <button @click="addFreeEntry('기타')" class="chip">기타</button>
+                            </div>
+
+                            <!-- 자유입력 항목 리스트 -->
+                            <template x-if="currentDoc.free && currentDoc.free.entries && currentDoc.free.entries.length > 0">
+                                <div class="free-items">
+                                    <template x-for="(entry, index) in currentDoc.free.entries" :key="'free-entry-' + index">
+                                        <div class="free-item-row">
+                                            <input type="text" x-model="entry.label" placeholder="항목명" class="free-label">
+                                            <input type="text" x-model="entry.description" placeholder="설명(선택)" class="free-desc">
+                                            <input type="number" x-model.number="entry.amount"
+                                                   @input="updateTotals()" placeholder="금액" min="0" class="free-amount">
+                                            <button @click="removeFreeEntry(index)" class="btn-remove">삭제</button>
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
+                            <template x-if="!currentDoc.free || !currentDoc.free.entries || currentDoc.free.entries.length === 0">
+                                <div class="empty-state">자유입력 항목이 없습니다. 위 버튼을 클릭하여 추가하세요.</div>
+                            </template>
+                        </div>
+                    </div>
+
+                    <!-- 기타 정보 -->
+                    <div class="form-section">
+                        <h3>기타 정보</h3>
+                        <div class="form-group">
+                            <label for="notes">비고</label>
+                            <textarea id="notes" x-model="currentDoc.notes" rows="3"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="submitDate">제출일자</label>
+                            <input type="date" id="submitDate" x-model="currentDoc.submitDate">
+                        </div>
+                        <div class="form-group">
+                            <label for="submitterTitle">제출자 직책</label>
+                            <input type="text" id="submitterTitle" x-model="currentDoc.submitterTitle">
+                        </div>
+                        <div class="form-group">
+                            <label for="submitterName">제출자 성명</label>
+                            <input type="text" id="submitterName" x-model="currentDoc.submitterName">
+                        </div>
+                    </div>
+                </div>
+            </aside>
+        </main>
+
+        <!-- 하단 상태바 -->
+        <footer class="app-footer">
+            <div class="status-left">
+                <span x-text="statusMessage"></span>
+            </div>
+            <div class="status-right">
+                <span x-show="currentDoc?.id">문서 ID: <span x-text="currentDoc?.id"></span></span>
+                <span x-show="currentDoc?.updatedAt">
+                    마지막 저장: <span x-text="formatDateTime(currentDoc?.updatedAt)"></span>
+                </span>
+            </div>
+        </footer>
+    </div>
+</div>
+
+</body>
+</html>

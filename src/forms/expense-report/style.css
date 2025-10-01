@@ -1,0 +1,281 @@
+/* 지출결의서 전용 스타일 */
+
+/* 문서 헤더 */
+.doc-header {
+    text-align: left;
+    margin-bottom: 20px;
+}
+
+.doc-number {
+    font-size: 12px;
+    color: #666;
+    padding: 4px 8px;
+    border: 1px solid #ddd;
+    background: #f9f9f9;
+    border-radius: 3px;
+}
+
+/* 제목과 결재란 컨테이너 */
+.title-approval-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+/* 문서 제목 */
+.doc-title {
+    font-size: 32px;
+    font-weight: bold;
+    margin: 0;
+    letter-spacing: 0.15em;
+    flex-shrink: 0;
+    padding: 20px 40px;
+    text-align: center;
+    min-width: 350px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100px;
+    border: 1px solid transparent;
+}
+
+/* 결재란 */
+.approval-box {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.approval-box table {
+    width: 290px;
+    border-collapse: separate;
+    border-spacing: 0;
+    border: 1px solid #000;
+    table-layout: fixed;
+}
+
+.approval-box th,
+.approval-box td {
+    border: 1px solid #333;
+    padding: 8px 20px;
+    text-align: center;
+}
+
+.approval-box th:first-child,
+.approval-box td:first-child {
+    width: 60px;  /* 결재 컬럼 - 고정 너비 */
+}
+
+.approval-box th:nth-child(2),
+.approval-box td:nth-child(2) {
+    width: 115px;  /* 지출담당자 컬럼 */
+}
+
+.approval-box th:nth-child(3),
+.approval-box td:nth-child(3) {
+    width: 115px;  /* 결재권자 컬럼 */
+}
+
+.approval-box th {
+    background: #f5f5f5;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.approval-box .sign-area {
+    height: 80px;
+    background: white;
+    vertical-align: middle;
+    position: relative;
+}
+
+/* 정보 테이블 */
+.info-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    border: 1px solid #000;
+    margin-bottom: 30px;
+}
+
+.info-table th,
+.info-table td {
+    border: 1px solid #333;
+    padding: 10px 15px;
+}
+
+.info-table th {
+    background: #f8f9fa;
+    font-weight: bold;
+    width: 15%;
+    text-align: center;
+    font-size: 14px;
+}
+
+.info-table td {
+    background: white;
+    font-size: 14px;
+}
+
+.vat-label {
+    display: inline-block;
+    margin-left: 10px;
+    padding: 2px 8px;
+    background: #e3f2fd;
+    color: #1976d2;
+    border-radius: 3px;
+    font-size: 12px;
+}
+
+/* 품목 테이블 */
+.items-section {
+    margin: 30px 0;
+}
+
+.items-section h3 {
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 15px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid #333;
+}
+
+.items-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    border: 1px solid #000;
+}
+
+.items-table thead {
+    background: #f8f9fa;
+}
+
+.items-table th,
+.items-table td {
+    border: 1px solid #333;
+    padding: 8px 12px;
+    font-size: 14px;
+}
+
+.items-table th {
+    font-weight: bold;
+    text-align: center;
+}
+
+.items-table td {
+    text-align: center;
+}
+
+.items-table tbody tr:hover {
+    background: #f5f5f5;
+}
+
+.items-table tfoot {
+    background: #f0f0f0;
+    font-weight: bold;
+}
+
+.items-table tfoot td {
+    border-top: 1px solid #000;
+}
+
+/* 비고 섹션 */
+.notes-section {
+    margin: 30px 0;
+}
+
+.notes-section h3 {
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 15px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid #333;
+}
+
+.notes-section p {
+    padding: 15px;
+    background: #fafafa;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    min-height: 60px;
+    white-space: pre-wrap;
+    line-height: 1.6;
+}
+
+/* 자유입력 항목 섹션 */
+.free-entries-section {
+    margin: 30px 0;
+}
+
+.free-entries-section h3 {
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 15px;
+    padding-bottom: 5px;
+    border-bottom: 2px solid #333;
+}
+
+/* 총 합계 섹션 */
+.grand-total-section {
+    margin: 20px 0;
+}
+
+.grand-total-section table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.grand-total-row td {
+    padding: 12px 15px;
+    background: #f0f4f8;
+    border: 2px solid #333;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.grand-total-row td:first-child {
+    width: 70%;
+    text-align: right;
+    padding-right: 30px;
+}
+
+.grand-total-row td:last-child {
+    text-align: right;
+    color: #d32f2f;
+}
+
+/* 하단 서명 영역 */
+.doc-footer {
+    margin-top: 50px;
+    text-align: center;
+}
+
+.submit-text {
+    font-size: 16px;
+    margin-bottom: 20px;
+}
+
+.submit-date {
+    font-size: 14px;
+    margin-bottom: 30px;
+    color: #666;
+}
+
+.submitter {
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.submitter span {
+    margin: 0 10px;
+}
+
+.sign-placeholder {
+    display: inline-block;
+    padding: 5px 15px;
+    border: 1px solid #999;
+    border-radius: 20px;
+    font-weight: normal;
+    font-size: 14px;
+}

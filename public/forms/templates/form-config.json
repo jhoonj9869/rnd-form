@@ -1,0 +1,54 @@
+{
+  "expense-report": {
+    "id": "expense-report",
+    "name": "지출결의서",
+    "displayName": "지출결의서",
+    "template": "forms/expense-report/template.html",
+    "icon": "💰",
+    "description": "경비 및 지출 결의를 위한 양식",
+    "fields": {
+      "title": "제목",
+      "department": "부서",
+      "applicant": "신청자",
+      "items": "지출항목",
+      "total": "총액"
+    },
+    "isDefault": true,
+    "source": "local"
+  },
+  "purchase-order": {
+    "id": "purchase-order",
+    "name": "구매요청서",
+    "displayName": "구매요청서",
+    "template": "forms/purchase-order/template.html",
+    "icon": "📦",
+    "description": "물품 및 서비스 구매 요청 양식",
+    "fields": {
+      "title": "제목",
+      "department": "부서",
+      "requestor": "요청자",
+      "items": "구매항목",
+      "vendor": "공급업체",
+      "total": "총액"
+    },
+    "source": "local"
+  },
+  "travel-report": {
+    "id": "travel-report",
+    "name": "출장보고서",
+    "displayName": "출장보고서",
+    "template": "forms/travel-report/template.html",
+    "icon": "✈️",
+    "description": "출장 결과 및 경비 보고서",
+    "fields": {
+      "title": "제목",
+      "department": "부서",
+      "traveler": "출장자",
+      "destination": "출장지",
+      "period": "출장기간",
+      "purpose": "출장목적",
+      "results": "출장결과"
+    },
+    "source": "local"
+  }
+}

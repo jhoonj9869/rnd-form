@@ -1,0 +1,136 @@
+/* 공통 스타일 - 모든 양식에서 사용하는 기본 스타일 */
+
+/* ========== 문서 레이아웃 ========== */
+.doc-header {
+    text-align: right;
+    margin-bottom: 10px;
+    font-size: 12px;
+    color: #666;
+}
+
+.doc-number {
+    font-weight: bold;
+}
+
+/* ========== 제목과 결재란 ========== */
+.title-approval-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 20px;
+}
+
+.doc-title {
+    font-size: 24px;
+    font-weight: bold;
+    margin: 0;
+    flex: 1;
+}
+
+.approval-box {
+    margin-left: 20px;
+}
+
+.approval-box table {
+    border-collapse: collapse;
+    border: 2px solid #000;
+}
+
+.approval-box th,
+.approval-box td {
+    border: 1px solid #000;
+    padding: 5px 15px;
+    text-align: center;
+    min-width: 60px;
+}
+
+.approval-box .sign-area {
+    height: 50px;
+    vertical-align: middle;
+}
+
+/* ========== 정보 테이블 (공통) ========== */
+.info-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+.info-table th,
+.info-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+.info-table th {
+    background-color: #f5f5f5;
+    font-weight: bold;
+    width: 15%;
+    text-align: center;
+}
+
+.info-table td {
+    background-color: white;
+}
+
+/* ========== 하단 서명 영역 ========== */
+.doc-footer {
+    margin-top: 40px;
+    text-align: center;
+    padding-top: 20px;
+}
+
+.submit-text {
+    font-size: 14px;
+    margin-bottom: 10px;
+}
+
+.submit-date {
+    font-size: 12px;
+    color: #666;
+    margin-bottom: 15px;
+}
+
+.submitter {
+    font-size: 14px;
+    margin-top: 20px;
+}
+
+.sign-placeholder {
+    margin-left: 10px;
+    font-size: 12px;
+}
+
+/* ========== 인쇄 스타일 ========== */
+@media print {
+    .doc-header,
+    .title-approval-container,
+    .doc-info,
+    .doc-content,
+    .doc-footer {
+        page-break-inside: avoid;
+    }
+
+    .approval-box table {
+        border: 2px solid #000 !important;
+    }
+
+    .info-table th,
+    .info-table td {
+        border: 1px solid #000 !important;
+    }
+}
+
+/* ========== 반응형 ========== */
+@media screen and (max-width: 768px) {
+    .title-approval-container {
+        flex-direction: column;
+    }
+
+    .approval-box {
+        margin-left: 0;
+        margin-top: 20px;
+        width: 100%;
+    }
+}

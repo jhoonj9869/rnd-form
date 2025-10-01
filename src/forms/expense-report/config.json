@@ -1,0 +1,168 @@
+{
+  "id": "expense-report",
+  "name": "지출결의서",
+  "version": "1.0.0",
+  "description": "연구비 지출결의서 양식",
+  "icon": "📄",
+  "category": "financial",
+  "fields": {
+    "docNumber": {
+      "type": "text",
+      "label": "문서번호",
+      "required": false,
+      "readonly": true,
+      "autoGenerate": true,
+      "format": "YYYY-MM-DD-XXX"
+    },
+    "title": {
+      "type": "text",
+      "label": "제목",
+      "required": true,
+      "placeholder": "지출 내역을 간략히 입력하세요"
+    },
+    "date": {
+      "type": "date",
+      "label": "작성일자",
+      "required": true,
+      "default": "today"
+    },
+    "department": {
+      "type": "text",
+      "label": "사용처",
+      "required": true,
+      "placeholder": "부서 또는 연구실명"
+    },
+    "requester": {
+      "type": "text",
+      "label": "사용자",
+      "required": true,
+      "placeholder": "신청자 성명"
+    },
+    "category": {
+      "type": "select",
+      "label": "지출과목",
+      "required": true,
+      "options": [
+        { "value": "", "label": "선택하세요" },
+        { "value": "research-materials", "label": "연구재료비" },
+        { "value": "research-equipment", "label": "연구장비비" },
+        { "value": "research-activity", "label": "연구활동비" },
+        { "value": "labor", "label": "인건비" },
+        { "value": "other", "label": "기타" }
+      ]
+    },
+    "paymentMethod": {
+      "type": "select",
+      "label": "지출방법",
+      "required": true,
+      "options": [
+        { "value": "", "label": "선택하세요" },
+        { "value": "credit-card", "label": "신용카드" },
+        { "value": "bank-transfer", "label": "계좌이체" },
+        { "value": "cash", "label": "현금" },
+        { "value": "corporate-card", "label": "법인카드" }
+      ]
+    },
+    "vendor": {
+      "type": "text",
+      "label": "구입처",
+      "required": true,
+      "placeholder": "구매처 또는 거래처명"
+    },
+    "purchaseDate": {
+      "type": "date",
+      "label": "구입일자",
+      "required": true,
+      "default": "today"
+    },
+    "amount": {
+      "type": "number",
+      "label": "지출금액",
+      "required": true,
+      "min": 0,
+      "showKorean": true
+    },
+    "vatIncluded": {
+      "type": "checkbox",
+      "label": "VAT 포함",
+      "default": true
+    },
+    "items": {
+      "type": "array",
+      "label": "품목 상세",
+      "addButton": "품목 추가",
+      "removeButton": "삭제",
+      "minItems": 1,
+      "fields": {
+        "description": {
+          "type": "text",
+          "label": "품목명",
+          "placeholder": "품목명 입력"
+        },
+        "quantity": {
+          "type": "number",
+          "label": "수량",
+          "default": 1,
+          "min": 1
+        },
+        "unitPrice": {
+          "type": "number",
+          "label": "단가",
+          "default": 0,
+          "min": 0
+        }
+      }
+    },
+    "notes": {
+      "type": "textarea",
+      "label": "비고",
+      "required": false,
+      "rows": 3,
+      "placeholder": "추가 사항을 입력하세요"
+    },
+    "submitDate": {
+      "type": "date",
+      "label": "제출일자",
+      "default": "today"
+    },
+    "submitterTitle": {
+      "type": "text",
+      "label": "제출자 직책",
+      "placeholder": "직책 입력"
+    },
+    "submitterName": {
+      "type": "text",
+      "label": "제출자 성명",
+      "placeholder": "성명 입력"
+    }
+  },
+  "approval": {
+    "enabled": true,
+    "roles": [
+      {
+        "id": "preparer",
+        "label": "지출담당자",
+        "signArea": true
+      },
+      {
+        "id": "approver",
+        "label": "결재권자",
+        "signArea": true
+      }
+    ]
+  },
+  "layout": {
+    "type": "three-column",
+    "ratio": "2:5:3"
+  },
+  "print": {
+    "paperSize": "A4",
+    "orientation": "portrait",
+    "margins": {
+      "top": "15mm",
+      "right": "20mm",
+      "bottom": "15mm",
+      "left": "20mm"
+    }
+  }
+}

@@ -1,0 +1,85 @@
+/* 인쇄용 스타일시트 - WYSIWYG 방식 */
+@media print {
+    /* UI 컴포넌트만 숨기기 (문서 내용은 그대로) */
+    .app-header,
+    .sidebar-left,
+    .sidebar-right,
+    .app-footer {
+        display: none !important;
+    }
+
+    /* 메인 3컬럼 레이아웃 재구성 */
+    .app-main {
+        display: block !important;
+        grid-template-columns: none !important;
+        margin: 0;
+        padding: 0;
+    }
+
+    /* 미리보기 영역을 전체 화면으로 */
+    .preview-area {
+        display: block !important;
+        width: 100% !important;
+        max-width: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        background: none !important;
+    }
+
+    /* preview-paper는 화면 스타일 그대로 유지 - 건드리지 않음 */
+    /* 브라우저의 '배율 자동 조정'이 알아서 A4에 맞춤 */
+
+    /* 테이블이 페이지를 넘어가지 않도록 */
+    table {
+        page-break-inside: auto;
+    }
+
+    tr {
+        page-break-inside: avoid;
+        page-break-after: auto;
+    }
+
+    thead {
+        display: table-header-group;
+    }
+
+    tfoot {
+        display: table-footer-group;
+    }
+
+    /* 색상 보존 */
+    * {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    /* 링크 스타일 제거 */
+    a {
+        text-decoration: none;
+        color: black;
+    }
+
+    /* 불필요한 요소 숨기기 */
+    button,
+    input[type="button"],
+    input[type="submit"],
+    .no-print {
+        display: none !important;
+    }
+}
+
+/* 인쇄 미리보기를 위한 스타일 */
+@media screen and (min-width: 1024px) {
+    .print-preview-mode .app-header,
+    .print-preview-mode .sidebar-left,
+    .print-preview-mode .sidebar-right,
+    .print-preview-mode .app-footer {
+        display: none;
+    }
+
+    .print-preview-mode .preview-area {
+        width: 100%;
+        max-width: 210mm;
+        margin: 0 auto;
+    }
+}

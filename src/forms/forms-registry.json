@@ -1,0 +1,36 @@
+{
+  "forms": [
+    {
+      "id": "expense-report",
+      "name": "지출결의서",
+      "path": "/forms/expense-report",
+      "icon": "📄",
+      "category": "financial",
+      "description": "연구비 지출결의서 양식",
+      "version": "1.0.0",
+      "enabled": true
+    }
+  ],
+  "categories": {
+    "financial": {
+      "name": "재무/회계",
+      "icon": "💰",
+      "order": 1
+    },
+    "hr": {
+      "name": "인사/총무",
+      "icon": "👥",
+      "order": 2
+    },
+    "research": {
+      "name": "연구/개발",
+      "icon": "🔬",
+      "order": 3
+    },
+    "general": {
+      "name": "일반",
+      "icon": "📋",
+      "order": 4
+    }
+  }
+}
