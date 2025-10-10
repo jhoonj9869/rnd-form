@@ -1,15 +1,74 @@
 # RND Form - 현재 상태
 
-> 📅 최종 업데이트: 2025-10-02 (오전 1:00)
-> 🎉 **MVP 완성 및 Git 저장소 초기화 완료**
+> 📅 최종 업데이트: 2025-10-10 (오전 10:00)
+> 🔧 **클라우드 작업 UX 개선 작업 계획 중**
 > 👥 사용자: NextE&M-JJH
 
 ## 🎯 현재 프로젝트 상태
 - **버전**: v2.3.0 MVP
 - **브랜치**: `master` (깨끗한 초기화 완료)
-- **커밋**: `2078704` (Initial commit)
+- **커밋**: `b570f3b` (Latest: docs update)
 - **포트**: 5174 (Vite 개발 서버)
 - **상태**: ✅ 프로덕션 준비 완료
+
+## 🚧 **진행 중인 작업 (2025-10-10 오후)**
+
+### 📋 **로딩 오버레이 구현 작업 (진행 중)**
+
+#### 배경
+- 클라우드 저장/동기화 중 다른 작업 시도 가능한 문제 발견
+- `googleDriveSyncing` 플래그만으로는 UI 차단 불충분
+- Electron의 `showBlockingDialog`는 OS 네이티브 다이얼로그라서 버튼 없이 자동 닫기 불가능
+- **해결책**: HTML/CSS 오버레이로 UI 차단 + 자동 닫기 구현
+
+#### 새로운 구현 방식
+**HTML/CSS 로딩 오버레이 시스템**
+- 독립적인 유틸리티 모듈 (`src/js/loading-overlay.js` 생성 예정)
+- 전체 화면 투명 막으로 모든 클릭/키보드 입력 차단
+- 로딩 스피너 + 메시지 표시
+- 작업 완료 시 자동으로 제거
+
+#### 구현 계획
+
+**1. 새 파일 생성**
+- `src/js/loading-overlay.js` - 독립적인 오버레이 유틸리티
+- 기존 코드와 완전 분리
+- Alpine.js/Electron API 의존성 없음
+
+**2. 수정할 파일**
+- `src/js/app.js`:
+  - `saveToCloud()` 함수: Blocking Dialog → 로딩 오버레이
+  - `pullFromCloud()` 함수: Blocking Dialog → 로딩 오버레이
+  - 모듈 import 추가
+
+**3. 구현 패턴**
+```javascript
+// 오버레이 표시
+const overlay = showLoadingOverlay("클라우드에 저장 중...");
+
+try {
+    await storageManager.saveToCloud(...);
+} finally {
+    hideLoadingOverlay(overlay); // 자동 닫힘!
+}
+```
+
+#### 안전 장치
+- 고유 ID (`#rnd-loading-overlay`) 사용 → 충돌 방지
+- `z-index: 99999` → 최상위 레이어
+- 중복 방지: 이미 표시 중이면 무시
+- 에러 발생해도 `finally` 블록에서 반드시 제거
+
+#### 기대 효과
+- ✅ 클라우드 작업 중 완전한 UI 차단
+- ✅ 자동으로 닫힘 (작업 완료 시)
+- ✅ 명확한 진행 상태 표시 (스피너 + 메시지)
+- ✅ 다른 기능에서도 재사용 가능
+- ✅ 기존 코드와 충돌 없음
+
+#### 진행 상황
+- ⏸️ **일시 중지** - 컨텍스트 부족으로 `/compact` 후 재개 예정
+- 다음 단계: `loading-overlay.js` 생성 및 `app.js` 수정
 
 ## 🚀 **최근 완료된 주요 작업 (2025-10-02)**
 

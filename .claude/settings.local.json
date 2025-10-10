@@ -11,7 +11,8 @@
       "Bash(git commit:*)",
       "Read(//c/Users/NextE&M-JJH/AppData/Roaming/rnd-form/**)",
       "Bash(ls:*)",
-      "Bash(npm run electron:dev:*)"
+      "Bash(npm run electron:dev:*)",
+      "Bash(timeout:*)"
     ],
     "deny": [],
     "ask": []

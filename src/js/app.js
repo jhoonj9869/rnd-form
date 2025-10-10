@@ -6,6 +6,7 @@ import { storageManager } from './storage-manager.js';
 import formRegistry from './form-registry-service.js';
 import PrintStampManager from './print-stamp-manager.js';
 import AttachmentManager from './attachment-manager.js';
+import { showLoadingOverlay, hideLoadingOverlay } from './loading-overlay.js';
 import {
     generateDocNumber,
     toKoreanAmount,
@@ -1604,6 +1605,12 @@ Alpine.data('expenseApp', () => ({
                 return;
             }
 
+            // 로딩 오버레이 표시
+            const overlay = showLoadingOverlay(
+                '클라우드에 저장 중입니다...',
+                '다른 작업을 하지 말고 잠시만 기다려주세요.'
+            );
+
             try {
                 this.googleDriveSyncing = true;
                 this.statusMessage = '클라우드 저장 중...';
@@ -1647,6 +1654,8 @@ Alpine.data('expenseApp', () => ({
                 alert('클라우드 저장 중 오류 발생: ' + error.message);
             } finally {
                 this.googleDriveSyncing = false;
+                // 오버레이 제거 (반드시 실행)
+                hideLoadingOverlay(overlay);
             }
         },
 
@@ -1690,6 +1699,12 @@ Alpine.data('expenseApp', () => ({
                 return;
             }
 
+            // 로딩 오버레이 표시
+            const overlay = showLoadingOverlay(
+                '클라우드에서 데이터 가져오는 중...',
+                '문서 목록을 동기화하고 있습니다. 잠시만 기다려주세요.'
+            );
+
             try {
                 this.googleDriveSyncing = true;
                 this.statusMessage = '클라우드에서 데이터 가져오는 중...';
@@ -1717,6 +1732,8 @@ Alpine.data('expenseApp', () => ({
                 this.statusMessage = '동기화 실패';
             } finally {
                 this.googleDriveSyncing = false;
+                // 오버레이 제거 (반드시 실행)
+                hideLoadingOverlay(overlay);
             }
         },
 
