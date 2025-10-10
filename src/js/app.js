@@ -1714,10 +1714,8 @@ Alpine.data('expenseApp', () => ({
                 if (result.success) {
                     await this.loadDocuments();
 
-                    // 동기화 후 Workspace에 문서가 없으면 새 문서 생성
-                    if (!this.workspaceDocument) {
-                        await this.newDocument();
-                    }
+                    // 동기화 완료 후 빈 화면 유지 (saveToCloud와 동일한 동작)
+                    // 사용자가 수동으로 새 문서를 생성하거나 클라우드 문서를 선택할 수 있음
 
                     this.statusMessage = `클라우드 동기화 완료 (${result.count || 0}개 문서)`;
                 } else {
