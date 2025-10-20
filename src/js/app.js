@@ -4,7 +4,6 @@ import { FormStorageService } from './form-storage-service.js';
 import { DocStateManager } from './doc-state-manager.js';
 import { storageManager } from './storage-manager.js';
 import formRegistry from './form-registry-service.js';
-import PrintStampManager from './print-stamp-manager.js';
 import AttachmentManager from './attachment-manager.js';
 import { showLoadingOverlay, hideLoadingOverlay } from './loading-overlay.js';
 import {
@@ -162,9 +161,6 @@ Alpine.data('expenseApp', () => ({
 
                 // 구글드라이브 인증 상태 확인
                 await this.checkGoogleDriveAuth();
-
-                // 인쇄 도장 관리자 초기화
-                this.printStampManager = new PrintStampManager();
 
                 // 첨부파일 관리자 초기화
                 await this.initAttachmentManager();
@@ -1233,215 +1229,181 @@ Alpine.data('expenseApp', () => ({
         // 인쇄
         async printDocument() {
             // 인쇄 전 자동저장
-            if (this.validateDocument()) {
-                await this.saveDocument();
-                this.statusMessage = '문서를 저장하고 인쇄를 준비합니다';
+            await this.saveDocument();
+            this.statusMessage = '인쇄 준비 중...';
 
-                // 도장 옵션 다이얼로그 표시
-                const dialog = this.printStampManager.createPrintDialog();
-                document.body.appendChild(dialog);
-
-                // 인쇄 진행 버튼 이벤트
-                const proceedBtn = dialog.querySelector('#proceedPrintBtn');
-                proceedBtn.addEventListener('click', async () => {
-                    // 도장이 선택되었다면 적용
-                    const addStamp = dialog.querySelector('#addStampOption').checked;
-                    if (addStamp && this.printStampManager.tempStamp) {
-                        // 결재란에 도장 적용 (첫 번째 결재란 찾기)
-                        const signatureArea = document.querySelector('.preview-paper .signature-cell');
-                        if (signatureArea) {
-                            this.printStampManager.applyToPrintPreview(signatureArea);
-                        }
-                    }
-
-                    // 다이얼로그 닫기
-                    dialog.remove();
-
-                    // 인쇄 실행
-                    setTimeout(async () => {
-                        if (window.electronAPI && window.electronAPI.print) {
-                            try {
-                                await window.electronAPI.print({ silent: false });
-                            } catch (error) {
-                                console.error('인쇄 오류:', error);
-                                window.print();
-                            }
-                        } else {
-                            window.print();
-                        }
-
-                        // 인쇄 후 임시 도장 제거
-                        this.printStampManager.clearTempStamp();
-                    }, 500);
-                });
+            // 순수 인쇄 (WYSIWYG - 미리보기 화면 그대로 출력)
+            if (window.electronAPI?.print) {
+                try {
+                    await window.electronAPI.print({ silent: false });
+                } catch (error) {
+                    console.error('인쇄 오류:', error);
+                    window.print();
+                }
             } else {
-                this.statusMessage = '필수 항목을 입력한 후 인쇄하세요';
-                alert('필수 항목을 모두 입력해주세요');
+                window.print();
             }
+
+            this.statusMessage = '준비됨';
         },
 
         // 인쇄 미리보기
         printPreview() {
-            if (this.validateDocument()) {
-                // 저장 후 미리보기
-                this.saveDocument().then(() => {
-                    // 미리보기 창 열기
-                    const printContent = document.querySelector('.preview-paper').innerHTML;
-                    const printWindow = window.open('', 'PRINT', 'width=800,height=900');
+            // 저장 후 미리보기
+            this.saveDocument().then(() => {
+                // 미리보기 창 열기
+                const printContent = document.querySelector('.preview-paper').innerHTML;
+                const printWindow = window.open('', 'PRINT', 'width=800,height=900');
 
-                    printWindow.document.write(`
-                        <!DOCTYPE html>
-                        <html lang="ko">
-                        <head>
-                            <meta charset="UTF-8">
-                            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                            <title>인쇄 미리보기 - ${this.currentDoc.title || '지출결의서'}</title>
-                            <style>
-                                * {
-                                    margin: 0;
-                                    padding: 0;
-                                    box-sizing: border-box;
-                                }
+                printWindow.document.write(`
+                    <!DOCTYPE html>
+                    <html lang="ko">
+                    <head>
+                        <meta charset="UTF-8">
+                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                        <title>인쇄 미리보기 - ${this.currentDoc.title || '지출결의서'}</title>
+                        <style>
+                            * {
+                                margin: 0;
+                                padding: 0;
+                                box-sizing: border-box;
+                            }
+                            body {
+                                font-family: 'Malgun Gothic', '맑은 고딕', sans-serif;
+                                background: #e5e7eb;
+                                padding: 20px;
+                            }
+                            .preview-paper {
+                                background: white;
+                                width: 210mm;
+                                margin: 0 auto;
+                                padding: 15mm 20mm;
+                                box-shadow: 0 0 20px rgba(0,0,0,0.1);
+                                min-height: 297mm;
+                            }
+                            .title-approval-container {
+                                display: flex;
+                                justify-content: space-between;
+                                align-items: flex-start;
+                                margin-bottom: 30px;
+                            }
+                            .doc-title {
+                                font-size: 28px;
+                                font-weight: bold;
+                                padding: 20px;
+                            }
+                            .approval-box table {
+                                width: 250px;
+                                border-collapse: collapse;
+                                border: 2px solid #000;
+                            }
+                            .approval-box th, .approval-box td {
+                                border: 1px solid #000;
+                                padding: 8px;
+                                text-align: center;
+                                font-size: 12px;
+                            }
+                            .approval-box .sign-area {
+                                height: 60px;
+                            }
+                            .info-table {
+                                width: 100%;
+                                border-collapse: collapse;
+                                border: 2px solid #000;
+                                margin-bottom: 20px;
+                            }
+                            .info-table th, .info-table td {
+                                border: 1px solid #000;
+                                padding: 10px;
+                                font-size: 13px;
+                            }
+                            .info-table th {
+                                background: #f5f5f5;
+                                width: 15%;
+                                text-align: center;
+                            }
+                            .items-table {
+                                width: 100%;
+                                border-collapse: collapse;
+                                border: 2px solid #000;
+                            }
+                            .items-table th, .items-table td {
+                                border: 1px solid #000;
+                                padding: 8px;
+                                font-size: 13px;
+                                text-align: center;
+                            }
+                            .items-table th {
+                                background: #f5f5f5;
+                            }
+                            .items-table tbody td:nth-child(2) {
+                                text-align: left;
+                            }
+                            .separator-row td {
+                                padding: 0 !important;
+                                height: 2px !important;
+                                background: #999 !important;
+                            }
+                            .print-controls {
+                                text-align: center;
+                                padding: 20px;
+                                background: white;
+                                border-top: 1px solid #ddd;
+                                position: sticky;
+                                bottom: 0;
+                            }
+                            .btn-print {
+                                padding: 10px 30px;
+                                background: #2563eb;
+                                color: white;
+                                border: none;
+                                border-radius: 5px;
+                                font-size: 16px;
+                                cursor: pointer;
+                                margin: 0 10px;
+                            }
+                            .btn-close {
+                                padding: 10px 30px;
+                                background: #6b7280;
+                                color: white;
+                                border: none;
+                                border-radius: 5px;
+                                font-size: 16px;
+                                cursor: pointer;
+                                margin: 0 10px;
+                            }
+                            @media print {
                                 body {
-                                    font-family: 'Malgun Gothic', '맑은 고딕', sans-serif;
-                                    background: #e5e7eb;
-                                    padding: 20px;
+                                    background: white;
+                                    padding: 0;
                                 }
                                 .preview-paper {
-                                    background: white;
-                                    width: 210mm;
-                                    margin: 0 auto;
-                                    padding: 15mm 20mm;
-                                    box-shadow: 0 0 20px rgba(0,0,0,0.1);
-                                    min-height: 297mm;
-                                }
-                                .title-approval-container {
-                                    display: flex;
-                                    justify-content: space-between;
-                                    align-items: flex-start;
-                                    margin-bottom: 30px;
-                                }
-                                .doc-title {
-                                    font-size: 28px;
-                                    font-weight: bold;
-                                    padding: 20px;
-                                }
-                                .approval-box table {
-                                    width: 250px;
-                                    border-collapse: collapse;
-                                    border: 2px solid #000;
-                                }
-                                .approval-box th, .approval-box td {
-                                    border: 1px solid #000;
-                                    padding: 8px;
-                                    text-align: center;
-                                    font-size: 12px;
-                                }
-                                .approval-box .sign-area {
-                                    height: 60px;
-                                }
-                                .info-table {
+                                    box-shadow: none;
                                     width: 100%;
-                                    border-collapse: collapse;
-                                    border: 2px solid #000;
-                                    margin-bottom: 20px;
-                                }
-                                .info-table th, .info-table td {
-                                    border: 1px solid #000;
-                                    padding: 10px;
-                                    font-size: 13px;
-                                }
-                                .info-table th {
-                                    background: #f5f5f5;
-                                    width: 15%;
-                                    text-align: center;
-                                }
-                                .items-table {
-                                    width: 100%;
-                                    border-collapse: collapse;
-                                    border: 2px solid #000;
-                                }
-                                .items-table th, .items-table td {
-                                    border: 1px solid #000;
-                                    padding: 8px;
-                                    font-size: 13px;
-                                    text-align: center;
-                                }
-                                .items-table th {
-                                    background: #f5f5f5;
-                                }
-                                .items-table tbody td:nth-child(2) {
-                                    text-align: left;
-                                }
-                                .separator-row td {
-                                    padding: 0 !important;
-                                    height: 2px !important;
-                                    background: #999 !important;
+                                    padding: 0;
                                 }
                                 .print-controls {
-                                    text-align: center;
-                                    padding: 20px;
-                                    background: white;
-                                    border-top: 1px solid #ddd;
-                                    position: sticky;
-                                    bottom: 0;
+                                    display: none;
                                 }
-                                .btn-print {
-                                    padding: 10px 30px;
-                                    background: #2563eb;
-                                    color: white;
-                                    border: none;
-                                    border-radius: 5px;
-                                    font-size: 16px;
-                                    cursor: pointer;
-                                    margin: 0 10px;
-                                }
-                                .btn-close {
-                                    padding: 10px 30px;
-                                    background: #6b7280;
-                                    color: white;
-                                    border: none;
-                                    border-radius: 5px;
-                                    font-size: 16px;
-                                    cursor: pointer;
-                                    margin: 0 10px;
-                                }
-                                @media print {
-                                    body {
-                                        background: white;
-                                        padding: 0;
-                                    }
-                                    .preview-paper {
-                                        box-shadow: none;
-                                        width: 100%;
-                                        padding: 0;
-                                    }
-                                    .print-controls {
-                                        display: none;
-                                    }
-                                }
-                            </style>
-                        </head>
-                        <body>
-                            <div class="preview-paper">
-                                ${printContent}
-                            </div>
-                            <div class="print-controls">
-                                <button class="btn-print" onclick="window.print()">🖨️ 인쇄하기</button>
-                                <button class="btn-close" onclick="window.close()">❌ 닫기</button>
-                            </div>
-                        </body>
-                        </html>
-                    `);
-                    printWindow.document.close();
-                    printWindow.focus();
-                });
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="preview-paper">
+                            ${printContent}
+                        </div>
+                        <div class="print-controls">
+                            <button class="btn-print" onclick="window.print()">🖨️ 인쇄하기</button>
+                            <button class="btn-close" onclick="window.close()">❌ 닫기</button>
+                        </div>
+                    </body>
+                    </html>
+                `);
+                printWindow.document.close();
+                printWindow.focus();
+            });
 
-                this.statusMessage = '인쇄 미리보기를 준비합니다';
-            } else {
-                this.statusMessage = '필수 항목을 입력한 후 미리보기하세요';
-                alert('필수 항목을 모두 입력해주세요');
-            }
+            this.statusMessage = '인쇄 미리보기';
         },
 
         // 저장 상태 추적 설정
@@ -1790,9 +1752,6 @@ Alpine.data('expenseApp', () => ({
         getAvailableFormTypes() {
             return storageManager.getAvailableFormTypes();
         },
-
-        // === 인쇄용 도장 시스템 (저장 없음) ===
-        printStampManager: null,
 
         // === 첨부파일 시스템 ===
         attachmentManager: null,
