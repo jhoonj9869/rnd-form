@@ -90,33 +90,71 @@ electron/
 - **수동저장**: 사용자 제어, 저장 상태 표시 (v2.4.1+)
 - **단축키**: Ctrl+S, Ctrl+N, Ctrl+P
 
-### 📋 양식별 코드
-특정 양식에만 해당하는 템플릿과 스타일
+### 📋 양식 시스템 (v2.5.0+)
+
+> **상세 설계:** [FORM_SYSTEM_DESIGN.md](./FORM_SYSTEM_DESIGN.md)
+
+#### 설계 원칙
+
+1. **데이터와 UI 분리**
+   - config.json: 필드 정의 (데이터 구조)
+   - template.html: 미리보기 화면 (UI)
+   - 두 영역은 독립적으로 수정 가능
+
+2. **컴포넌트 재사용**
+   - 공통 UI 블록 라이브러리 (`components/`)
+   - 복사 후 약간 수정만으로 사용
+   - AI/개발자가 조합 가능
+
+3. **수동 조립 방식**
+   - 자동 생성 없음 (오버엔지니어링 방지)
+   - 명확하고 간단한 구조
 
 #### 파일 구조
 ```
 src/forms/
-├── common/                  # 공통 템플릿 (v2.3.0+)
-│   ├── template.html       # 새 양식 기본 템플릿
+├── components/              # 재사용 가능한 UI 블록 라이브러리 ⭐
+│   ├── README.md           # 컴포넌트 사용 가이드
+│   ├── doc-header.html     # 문서 헤더
+│   ├── approval-box-2col.html  # 결재란 (2명)
+│   ├── approval-box-3col.html  # 결재란 (3명)
+│   ├── info-table-1col.html    # 기본정보 테이블 (1열)
+│   ├── info-table-2col.html    # 기본정보 테이블 (2열)
+│   ├── items-table-basic.html  # 품목 테이블
+│   └── signature.html          # 서명란
+│
+├── common/                  # 공통 리소스
+│   ├── template.html       # 기본 템플릿 (참조용)
 │   ├── style.css          # 공통 스타일
 │   └── README.md          # 사용 가이드
+│
 ├── expense-report/         # 지출결의서 양식
-│   ├── template.html      # 양식 템플릿
-│   ├── style.css         # 양식 전용 스타일
-│   └── config.json       # 양식 설정
-├── purchase-order/         # 구매요청서 양식 (v2.3.1+)
-│   ├── template.html      # 양식 템플릿
-│   └── style.css         # 양식 전용 스타일
-└── templates/             # 설정 파일
-    ├── form-config.json   # 모든 양식 설정
-    └── folder-mapping.json # 한글-영문 매핑
+│   ├── config.json        # 필드 정의 (데이터 구조) ⭐
+│   ├── template.html      # 미리보기 화면 (컴포넌트 조립)
+│   ├── style.css         # 양식 전용 스타일 (선택)
+│   └── form-logic.js     # 양식별 로직 (선택)
+│
+└── purchase-order/         # 구매요청서 양식 (예시)
+    ├── config.json
+    ├── template.html
+    └── form-logic.js
 ```
 
-### 양식 구성요소
-- **템플릿 구조**: 결재란, 품목 테이블
-- **필드 정의**: 제목, 부서, 신청자 등
-- **검증 규칙**: 필수 항목, 금액 계산
-- **스타일**: 테두리, 여백, 폰트 크기
+#### 양식 구성 요소
+
+각 양식은 독립적인 4개 파일로 구성:
+
+| 파일 | 역할 | 필수 여부 |
+|------|------|----------|
+| `config.json` | 필드 정의 (데이터 구조) | ✅ 필수 |
+| `template.html` | 미리보기 화면 (UI) | ✅ 필수 |
+| `style.css` | 양식 전용 스타일 | 선택 |
+| `form-logic.js` | 헬퍼 함수, 계산 로직 | 선택 |
+
+**새 양식 추가 시:**
+1. `components/` 에서 필요한 블록 복사
+2. 필드명/레이블만 수정
+3. 완성! (10-30분 소요)
 
 ## 🎯 중앙 초기화 지점 아키텍처 (v2.5.0-pre)
 
