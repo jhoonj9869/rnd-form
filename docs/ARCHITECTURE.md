@@ -59,12 +59,12 @@ src/
 │   ├── cloud-db.js               # Google Drive 연동
 │   ├── attachment-manager.js     # 첨부파일 관리
 │   ├── background-uploader.js    # 백그라운드 업로드 큐
-│   ├── print-stamp-manager.js    # 인쇄용 도장 (임시)
+│   ├── loading-overlay.js        # 로딩 오버레이 (v2.3.1+)
 │   ├── db.js                     # IndexedDB 기본 관리 (Legacy)
 │   └── utils.js                  # 공통 유틸리티
 ├── css/
 │   ├── main.css                  # 전역 스타일
-│   └── print.css                 # 인쇄 전역
+│   └── print.css                 # 인쇄 스타일 (@media print)
 └── index.html                     # 메인 앱 컨테이너
 
 electron/
@@ -83,7 +83,10 @@ electron/
 - **백그라운드 업로드**: 재시도 큐 시스템
 - **문서 관리**: 저장, 불러오기, 삭제
 - **UI 레이아웃**: 3컬럼 구조
-- **인쇄 시스템**: 도장 임시 적용
+- **인쇄 시스템** (v2.4.0+):
+  - WYSIWYG 방식 (미리보기 화면 그대로 출력)
+  - 도장/워터마크는 양식별 UI에서 선택적 추가
+  - `window.print()` / `electronAPI.print()` 직접 호출
 - **수동저장**: 사용자 제어, 저장 상태 표시 (v2.4.1+)
 - **단축키**: Ctrl+S, Ctrl+N, Ctrl+P
 
@@ -428,7 +431,7 @@ currentDoc: {
 ## 🔒 보안 및 성능
 
 ### 보안 조치
-- **Stamp System**: Applied temporarily at print time only (never stored)
+- **Print Security** (v2.4.0+): WYSIWYG approach - sensitive data added via form UI only
 - **OAuth2 PKCE**: Secure authentication without client secret
 - **Data Isolation**: Workspace/Cache separation
 - **Token Storage**: Electron safeStorage API
