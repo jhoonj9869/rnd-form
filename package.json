@@ -1,6 +1,6 @@
 {
   "name": "rnd-form",
-  "version": "2.2.1",
+  "version": "2.5.0",
   "description": "Google Drive 연동 지출결의서 관리 도구",
   "private": true,
   "main": "electron/main.js",
@@ -33,7 +33,7 @@
       "publish": {
         "provider": "github",
         "owner": "jhoonj9869",
-        "repo": "rnd-form"
+        "repo": "rnd-form-releases"
       }
     },
     "nsis": {
@@ -46,7 +46,7 @@
     "publish": {
       "provider": "github",
       "owner": "jhoonj9869",
-      "repo": "rnd-form",
+      "repo": "rnd-form-releases",
       "releaseType": "release"
     }
   },

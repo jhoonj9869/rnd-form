@@ -456,7 +456,7 @@ function setupAutoUpdater() {
   autoUpdater.setFeedURL({
     provider: 'github',
     owner: 'jhoonj9869',
-    repo: 'rnd-form'
+    repo: 'rnd-form-releases'
   });
 
   // 업데이트 설정
